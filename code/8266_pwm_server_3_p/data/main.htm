@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html>   
+  
+	<head>
+
+		<meta charset=utf-8 />
+		<meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
+
+
+		<style type="text/css">
+
+		.slidecontainer {
+		  width: 80%; /* Width of the outside container */
+		  margin: 0 auto;
+		}
+
+		/* The slider itself */
+		.slider {
+		  -webkit-appearance: none;  /* Override default CSS styles */
+		  appearance: none;
+		  width: 100%; /* Full-width */
+		  height: 50px; /* Specified height */
+		  background: #d3d3d3; /* Grey background */
+		  outline: none; /* Remove outline */
+		  opacity: 0.7; /* Set transparency (for mouse-over effects on hover) */
+		  -webkit-transition: .2s; /* 0.2 seconds transition on hover */
+		  transition: opacity .2s;
+		}
+
+		.slider::-webkit-slider-thumb {
+		  -webkit-appearance: none;
+		  appearance: none;
+		  width: 25px;
+		  height: 50px;
+		  background: #4CAF50;
+		  cursor: pointer;
+		}
+
+		.but {
+		  width: 80%; /* Width of the outside container */
+		  margin: 0 auto;
+		}
+
+		.signa {
+		  width: 80%; /* Width of the outside container */
+		  margin: 0 auto;
+		  font-family: Times,Courier,Arial,Times, serif;
+		  font-size: 50%;
+		  text-align: right;
+		  font-style: italic;		  
+		}		
+
+
+
+		</style>
+		
+		<script type="text/javascript">
+			//comunicazioni col server
+			httpreq_0= new XMLHttpRequest();
+			var push_p;
+			var push_t;
+			var stopp_t;
+			var v_name;
+			var tc = 0;  //connection test
+
+
+			//gestione riposte del server ricevo stringhe di stato separate da £ 
+			httpreq_0.onreadystatechange = function() {
+				if (httpreq_0.readyState == 4 && httpreq_0.status==200) {
+				var res = httpreq_0.responseText;
+				console.log(httpreq_0.responseText);
+
+				//divido stringa in array di 3 stringhe
+				var arr = res.split("£");
+
+				//uso array per popolare variabili 
+				push_p = arr[0];
+				push_t = arr[1];
+				stopp_t = arr[2];
+				v_name = arr[3];
+
+				//per aggiornare label
+				lab1.innerHTML = push_p;
+				lab2.innerHTML = push_t;
+				lab3.innerHTML = stopp_t;
+				lab4.innerHTML = v_name;
+
+				//per cambiare posizione agli sliders
+				document.getElementById("pushPwm").value = parseInt(arr[0]); 
+				document.getElementById("t_push").value = parseInt(arr[1]);
+				document.getElementById("t_stop").value = parseInt(arr[2]);	
+
+				tc = 1;
+				//connessione attiva semaforo verde				
+				}
+			};
+
+			function invio(){
+				//trasmetto dati con POST
+				httpreq_0.open("POST","STATUS",true);
+				httpreq_0.setRequestHeader("Content-Type","application/x-www-form-urlencoded");
+				httpreq_0.send("push_p=" + push_p +"&push_t=" + push_t + "&stop_t=" + stopp_t );
+			}
+
+
+			function load(){
+				//trasmetto dati con POST - invio solo la key load
+				httpreq_0.open("POST","STATUS",true);
+				httpreq_0.setRequestHeader("Content-Type","application/x-www-form-urlencoded");
+				httpreq_0.send("load=" + "");
+		  		//carcati valori strored quindi metto green il pulsante stored
+		  		sto_b.style.backgroundColor = "green";				
+			}
+
+
+			function store(){
+				//trasmetto dati con POST - invio solo la key store
+				httpreq_0.open("POST","STATUS",true);
+				httpreq_0.setRequestHeader("Content-Type","application/x-www-form-urlencoded");
+				httpreq_0.send("store=" + "");
+				sto_b.style.backgroundColor = "green";
+			}
+
+
+
+			function update(){
+				//trasmetto dati con POST - invio solo la key up
+				httpreq_0.open("POST","STATUS",true);
+				httpreq_0.setRequestHeader("Content-Type","application/x-www-form-urlencoded");
+				httpreq_0.send("update=" + "");				
+			}
+
+
+
+			//verifico connessione ogni 3 secondi
+			setInterval(function(){
+				tc = 0;
+				update();
+				//aspetto 2  per la rispo.Se arriva tc sarà 1 diversamente 0
+				setTimeout (function(){
+					if (tc){
+						conne.innerHTML ="CONNECTED";
+						conne.style.backgroundColor = "green";
+						conne.style.color = "black";
+						} else { 
+							conne.innerHTML ="DISCONNECTED";
+							conne.style.backgroundColor = "red";
+							conne.style.color = "black";
+							//conne.style.border-color = "black";
+					}
+				},2000);
+
+			},3000);
+
+		</script>
+
+	</head>
+
+	<body bgcolor = "#5F9EA0" onload = "load()">
+
+	<br>
+	<div style = "width: 80%;  margin: 0 auto;">
+	<div style ="text-align: center; font-size: 150%;"><span id="name">____________</span></div>
+	<div style ="text-align: center; font-size: 120%;"><span id="conn">____________</span></div>
+	</div>
+
+	
+	<br><br><br>
+	<div class="but"><h2>PUSH_power: <span id="PUSH_power"></span></h2></div>
+
+	<div class="slidecontainer">
+		<input type="range"  min="0" max ="500" value="0" class="slider" id="pushPwm" >		
+	</div>
+
+	<br>
+	<div class="but"><h2>PUSH_timer: <span id="PUSH_timer"></span></h2></div>
+	<div class="slidecontainer">
+		<input type="range"  min="0" max ="2000" value="0" class="slider" id="t_push" >
+	</div>
+
+	<br>
+	<div class="but"><h2>STOP_timer: <span id="STOP_timer"></span></h2></div>
+	<div class="slidecontainer">
+		<input type="range"  min="0" max ="2000" value="0" class="slider" id="t_stop" >
+	</div>
+
+	<br><br>
+	<div class="but">
+	<div style ="float:left; width: 50%;"><button type="submit" style="font-size : 40px; width: 130px; height: 60px;" onclick="load()">Load</button></div>
+	<div style ="float:right;"><button type="submit" id="store_b" style="font-size : 40px; width: 130px; height: 60px;" onclick="store()">Store</button></div>
+	<div style="clear: both;"></div>
+	</div>
+
+	<br>
+	<div class = "signa"> <h1>IK2wxm</h1></div>
+
+
+	<script>
+		
+		var slid1 = document.getElementById("pushPwm");
+		var lab1 = document.getElementById("PUSH_power");
+
+		// Update the current slider value (each time you drag the slider handle)
+		slid1.oninput = function() {
+		  push_p=this.value;	
+		  lab1.innerHTML = push_p;
+		  //sto modificando rispetto a valori strored quindi metto red il pulsante stored
+		  sto_b.style.backgroundColor = "red";
+		  invio();
+		}
+
+
+		var slid2 = document.getElementById("t_push");
+		var lab2 = document.getElementById("PUSH_timer");
+
+		slid2.oninput = function() {
+		  push_t=this.value;	
+		  lab2.innerHTML = push_t;
+		  //sto modificando rispetto a valori strored quindi metto red il pulsante stored
+		  sto_b.style.backgroundColor = "red";		  
+		  invio();
+		}
+
+
+		var slid3 = document.getElementById("t_stop");
+		var lab3 = document.getElementById("STOP_timer");
+	
+		slid3.oninput = function() {
+		  stopp_t=this.value;	
+		  lab3.innerHTML = stopp_t;
+		  //sto modificando rispetto a valori strored quindi metto red il pulsante stored
+		  sto_b.style.backgroundColor = "red";		  
+		  invio();
+		}
+		//recupero vari handle 
+		var lab4  = document.getElementById("name");
+		var sto_b = document.getElementById("store_b");
+		var conne  = document.getElementById("conn");
+	</script>
+
+
+
+	</body>
+</html>
